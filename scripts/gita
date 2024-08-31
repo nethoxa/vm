@@ -22,16 +22,14 @@ message="$*"
 case $action in
     g)
         if [ -n "$message" ]; then
-                git add $path
-                git commit -m "[GENERAL] $message"
+                git commit -a -m "[GENERAL] $message"
             else
                 echo "No commit message provided"
         fi
         ;;
     d)
         if [ -n "$message" ]; then
-                git add $path
-                git commit -m "[DEV] $message"
+                git commit -a -m "[DEV] $message"
             else
                 echo "No commit message provided"
         fi
@@ -45,8 +43,7 @@ case $action in
         ;;
     b)
         if [ -n "$message" ]; then
-                git add $path
-                git commit -m "[BUGFIX] $message"
+                git commit -a -m "[BUGFIX] $message"
             else
                 echo "No commit message provided"
         fi
