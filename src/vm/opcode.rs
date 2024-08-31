@@ -14,7 +14,7 @@ pub enum Opcode {
 	///
 	/// - 0..8   is the opcode
 	/// - 8..16  is the first operand
-	/// - 16..24 is the second operando
+	/// - 16..24 is the second operand
 	/// - 24..32 is the destination registry
 	ADD,
 
@@ -22,7 +22,7 @@ pub enum Opcode {
 	///
 	/// - 0..8   is the opcode
 	/// - 8..16  is the first operand
-	/// - 16..24 is the second operando
+	/// - 16..24 is the second operand
 	/// - 24..32 is the destination registry
 	MUL,
 
@@ -30,7 +30,7 @@ pub enum Opcode {
 	///
 	/// - 0..8   is the opcode
 	/// - 8..16  is the first operand
-	/// - 16..24 is the second operando
+	/// - 16..24 is the second operand
 	/// - 24..32 is the destination registry
 	SUB,
 
@@ -38,7 +38,7 @@ pub enum Opcode {
 	///
 	/// - 0..8   is the opcode
 	/// - 8..16  is the first operand
-	/// - 16..24 is the second operando
+	/// - 16..24 is the second operand
 	/// - 24..32 is the destination registry
 	DIV,
 
@@ -46,7 +46,7 @@ pub enum Opcode {
 	///
 	/// - 0..8   is the opcode
 	/// - 8..16  is the first operand
-	/// - 16..24 is the second operando
+	/// - 16..24 is the second operand
 	/// - 24..32 is the destination registry
 	REM,
 
@@ -56,6 +56,55 @@ pub enum Opcode {
 	/// - 8..24  is the destination PC
 	/// - 24..32 is filled with 0s
 	JMP,
+
+	/// EQ operation
+	/// - 0..8   opcode
+	/// - 8..16  is the first operand
+	/// - 16..24 is the second operand
+	/// - 24..32 is the destination registry
+	EQ,
+
+	/// LT operation
+	/// - 0..8   opcode
+	/// - 8..16  is the first operand
+	/// - 16..24 is the second operand
+	/// - 24..32 is the destination registry
+	LT,
+
+	/// GT operation
+	/// - 0..8   opcode
+	/// - 8..16  is the first operand
+	/// - 16..24 is the second operand
+	/// - 24..32 is the destination registry
+	GT,
+
+	/// AND operation
+	/// - 0..8   opcode
+	/// - 8..16  is the first operand
+	/// - 16..24 is the second operand
+	/// - 24..32 is the destination registry
+	AND,
+
+	/// OR operation
+	/// - 0..8   opcode
+	/// - 8..16  is the first operand
+	/// - 16..24 is the second operand
+	/// - 24..32 is the destination registry
+	OR,
+
+	/// XOR operation
+	/// - 0..8   opcode
+	/// - 8..16  is the first operand
+	/// - 16..24 is the second operand
+	/// - 24..32 is the destination registry
+	XOR,
+
+	/// NOT operation
+	/// - 0..8   opcode
+	/// - 8..16  is the first operand
+	/// - 16..24 is the destination registry
+	/// - 24..32 is filled with 0s
+	NOT,
 
 	/// `Opcode` not supported
 	NIL
@@ -73,6 +122,13 @@ impl From<u8> for Opcode {
 			5 => Opcode::DIV,
 			6 => Opcode::REM,
 			7 => Opcode::JMP,
+			8 => Opcode::EQ,
+			9 => Opcode::LT,
+			10 => Opcode::GT,
+			11 => Opcode::AND,
+			12 => Opcode::OR,
+			13 => Opcode::XOR,
+			14 => Opcode::NOT,
 
 			_ => Opcode::NIL
 		}
