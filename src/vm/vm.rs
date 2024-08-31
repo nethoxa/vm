@@ -1,14 +1,14 @@
 use crate::vm::opcode::Opcode;
-use crate::{debug, error, info, warn};
+use crate::{error, info, warn};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 /// Registry-based virtual machine
 pub struct VM {
-	registers: [u32; 32],
-	pc:        usize,
-	program:   Vec<u8>,
+	pub registers: [u32; 32],
+	pub pc:        usize,
+	pub program:   Vec<u8>,
 
-	aborted: bool
+	pub aborted: bool
 }
 
 impl VM {
@@ -66,7 +66,7 @@ impl VM {
 	}
 
 	/// Main function of the `VM`
-	fn run(&mut self) -> Option<()> {
+	pub fn run(&mut self) -> Option<()> {
 		loop {
 			if self.pc >= self.program.len() {
 				error!("Something went wrong, VM program counter > program length");
@@ -238,6 +238,11 @@ impl VM {
 						break;
 					}
 					self.registers[dest] = !a as u32;
+				},
+				Opcode::NOP => {
+					info!(format!("NOP found at cycle {}, waiting for more bytecode", self.pc));
+					
+					break;
 				},
 				Opcode::NIL => {
 					error!(format!("NIL found at cycle {}, panic", self.pc));

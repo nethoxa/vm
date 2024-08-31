@@ -106,6 +106,9 @@ pub enum Opcode {
 	/// - 24..32 is filled with 0s
 	NOT,
 
+	/// NOP operation
+	NOP,
+
 	/// `Opcode` not supported
 	NIL
 }
@@ -129,6 +132,7 @@ impl From<u8> for Opcode {
 			12 => Opcode::OR,
 			13 => Opcode::XOR,
 			14 => Opcode::NOT,
+			15 => Opcode::NOP,
 
 			_ => Opcode::NIL
 		}
