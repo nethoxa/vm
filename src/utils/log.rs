@@ -1,4 +1,5 @@
 #[macro_export]
+/// INFO macro for prettier CLI output
 macro_rules! info {
     ( $( $x:expr )? ) => {
         println!("[\x1b[92mINFO\x1b[0m] {}", $( $x )?);
@@ -6,6 +7,7 @@ macro_rules! info {
 }
 
 #[macro_export]
+/// WARN macro for prettier CLI output
 macro_rules! warn {
     ( $( $x:expr )? ) => {
         println!("[\x1b[91mWARN\x1b[0m] {}", $( $x )?);
@@ -13,6 +15,7 @@ macro_rules! warn {
 }
 
 #[macro_export]
+/// ERROR macro for prettier CLI output
 macro_rules! error {
     ( $( $x:expr )? ) => {
         println!("[\x1b[93mERROR\x1b[0m] {}", $( $x )?);
@@ -20,6 +23,7 @@ macro_rules! error {
 }
 
 #[macro_export]
+/// DEBUG macro for prettier CLI output
 macro_rules! debug {
     ( $( $x:expr )? ) => {
         println!("[\x1b[92m+\x1b[0m] {}", $( $x )?);
