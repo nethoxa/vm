@@ -5,7 +5,10 @@ use crate::common::errors::MathError;
 use super::U256;
 
 impl U256 {
-	fn div_rem_long(self, other: U256) -> Result<(U256, U256), MathError> {
+	fn div_rem_long(
+		self,
+		other: U256
+	) -> Result<(U256, U256), MathError> {
 		if other == U256::zero() {
 			return Err(MathError::DivisionByZero)
 		}
@@ -22,20 +25,20 @@ impl U256 {
 		let mut remainder = U256::zero();
 
 		for i in 0..256 {
-            // Left shift remainder by 1 bit
-            remainder = remainder << U256::one();
+			// Left shift remainder by 1 bit
+			remainder = remainder << U256::one();
 
-            // Set the least significant bit of remainder to the i-th bit of dividend
-            if self.bit(255 - i as u64).unwrap() {
-                remainder.set_bit(0, true).unwrap();
-            }
+			// Set the least significant bit of remainder to the i-th bit of dividend
+			if self.bit(255 - i as u64).unwrap() {
+				remainder.set_bit(0, true).unwrap();
+			}
 
-            // If remainder >= divisor, subtract divisor from remainder and set quotient bit
-            if remainder >= other {
-                remainder = remainder - other;
-                quotient.set_bit(255 - i as u64, true).unwrap();
-            }
-        }
+			// If remainder >= divisor, subtract divisor from remainder and set quotient bit
+			if remainder >= other {
+				remainder = remainder - other;
+				quotient.set_bit(255 - i as u64, true).unwrap();
+			}
+		}
 
 		Ok((quotient, remainder))
 	}

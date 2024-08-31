@@ -5,7 +5,10 @@ use crate::common::errors::CommonError;
 use super::U256;
 
 impl U256 {
-	pub fn bit(&self, index: u64) -> Result<bool, CommonError> {
+	pub fn bit(
+		&self,
+		index: u64
+	) -> Result<bool, CommonError> {
 		if index >= Self::BITS {
 			Err(CommonError::OutOfBoundsAccess)
 		} else {
@@ -16,7 +19,11 @@ impl U256 {
 		}
 	}
 
-	pub fn set_bit(&mut self, index: u64, value: bool) -> Result<(), CommonError> {
+	pub fn set_bit(
+		&mut self,
+		index: u64,
+		value: bool
+	) -> Result<(), CommonError> {
 		if index >= Self::BITS {
 			Err(CommonError::OutOfBoundsAccess)
 		} else {
@@ -32,8 +39,11 @@ impl U256 {
 		}
 	}
 
-	pub fn byte(&self, index: u64) -> Result<u8, CommonError> {
-		if index >= Self::BYTES  {
+	pub fn byte(
+		&self,
+		index: u64
+	) -> Result<u8, CommonError> {
+		if index >= Self::BYTES {
 			Err(CommonError::OutOfBoundsAccess)
 		} else {
 			let (word, byte) = (3 - index / 8, (index % 8) * 8);
@@ -42,14 +52,14 @@ impl U256 {
 			Ok(result as u8)
 		}
 	}
-	
+
 	/// Mask to apply to the highest word to get the correct number of bits
 	pub fn mask(bits: usize) -> u64 {
 		if bits == 0 {
 			0
 		} else {
 			let bits = bits % 64;
-			
+
 			if bits == 0 {
 				u64::MAX
 			} else {
@@ -116,7 +126,7 @@ impl Shr for U256 {
 			}
 
 			result
-        }
+		}
 	}
 }
 
@@ -128,7 +138,6 @@ impl ShrAssign for U256 {
 		*self = self.shr(other);
 	}
 }
-
 
 #[test]
 fn test_bit_byte_getter() {
@@ -146,7 +155,7 @@ fn test_bit_byte_getter() {
 
 	let number_as_u128 = u128::from(number);
 	assert!(number_as_u128 == u128::pow(2, 102) + u128::pow(2, 33));
-	
+
 	assert!(number.byte(4).unwrap() == 2);
 	assert!(number.byte(12).unwrap() == u8::pow(2, 6));
 }

@@ -5,6 +5,6 @@ impl U256 {
 		self,
 		degree: u8
 	) -> U256 {
-		U256::zero()
+		todo!()
 	}
 }

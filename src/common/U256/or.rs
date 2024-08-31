@@ -9,7 +9,13 @@ impl BitOr for U256 {
 		self,
 		other: U256
 	) -> U256 {
-		todo!()
+		let mut result = [0; 4];
+
+		for i in 0..4 {
+			result[3 - i] = self.words[3 - i] | other.words[3 - i];
+		}
+
+		U256::new(result)
 	}
 }
 
@@ -18,6 +24,8 @@ impl BitOrAssign for U256 {
 		&mut self,
 		other: U256
 	) {
-		todo!()
+		for i in 0..4 {
+			self.words[3 - i] = self.words[3 - i] | other.words[3 - i];
+		}
 	}
 }

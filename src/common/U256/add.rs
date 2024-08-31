@@ -54,7 +54,10 @@ impl Add for U256 {
 }
 
 impl AddAssign for U256 {
-	fn add_assign(&mut self, other: U256) {
+	fn add_assign(
+		&mut self,
+		other: U256
+	) {
 		*self = self.overflowing_add(other).0;
 	}
 }
@@ -62,13 +65,19 @@ impl AddAssign for U256 {
 impl Sub for U256 {
 	type Output = U256;
 
-	fn sub(self, other: U256) -> U256 {
+	fn sub(
+		self,
+		other: U256
+	) -> U256 {
 		self.overflowing_sub(other).0
 	}
 }
 
 impl SubAssign for U256 {
-	fn sub_assign(&mut self, other: U256) {
+	fn sub_assign(
+		&mut self,
+		other: U256
+	) {
 		*self = self.overflowing_sub(other).0;
 	}
 }
