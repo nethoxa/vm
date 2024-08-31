@@ -38,8 +38,7 @@ case $action in
         ;;
     r)
         if [ -n "$message" ]; then
-                git add $path
-                git commit -m "[REORG] $message"
+                git commit -a -m "[REORG] $message"
             else
                 echo "No commit message provided"
         fi

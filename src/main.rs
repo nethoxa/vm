@@ -1,3 +1,4 @@
+pub mod common;
 pub mod vm;
 
 #[macro_use]

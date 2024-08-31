@@ -240,8 +240,11 @@ impl VM {
 					self.registers[dest] = !a as u32;
 				},
 				Opcode::NOP => {
-					info!(format!("NOP found at cycle {}, waiting for more bytecode", self.pc));
-					
+					info!(format!(
+						"NOP found at cycle {}, waiting for more bytecode",
+						self.pc
+					));
+
 					break;
 				},
 				Opcode::NIL => {
@@ -373,6 +376,7 @@ mod vm_tests {
 		);
 
 		// about the last term, !1 is designed to flip all bits except the last
-		// one, which is set to 0, ergo 2**32 - 2 = (2**32 - 1) - 1 = u32::MAX - 1
+		// one, which is set to 0, ergo 2**32 - 2 = (2**32 - 1) - 1 = u32::MAX -
+		// 1
 	}
 }
