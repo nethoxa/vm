@@ -1,4 +1,5 @@
 use crate::vm::opcode::Opcode;
+use crate::{debug, error, info, warn};
 
 #[derive(Debug)]
 /// Registry-based virtual machine
@@ -18,7 +19,8 @@ impl VM {
 		}
 	}
 
-	/// Fetches the byte at `self.pc`, cast it into an `Opcode` and increments `self.pc` by `1`
+	/// Fetches the byte at `self.pc`, cast it into an `Opcode` and increments
+	/// `self.pc` by `1`
 	fn decode_opcode(&mut self) -> Opcode {
 		let opcode = Opcode::from(self.program[self.pc]);
 		self.pc += 1;
@@ -37,49 +39,129 @@ impl VM {
 		let result = ((self.program[self.pc] as u16) << 8) | self.program[self.pc + 1] as u16;
 		self.pc += 2;
 		result
+	}
 
+	fn get_register(&mut self) -> Option<usize> {
+		let register = self.next_8_bits() as usize;
+		if register >= self.registers.len() {
+			error!(format!("Registry OOB access, panic"));
+			None
+		} else {
+			Some(register)
+		}
 	}
 
 	/// Main function of the `VM`
-	fn run(&mut self) {
+	fn run(&mut self) -> Option<()> {
 		loop {
 			if self.pc >= self.program.len() {
-				println!("[\x1b[93mERROR\x1b[0m] Something went wrong, VM program counter > program length");
+				error!("Something went wrong, VM program counter > program length");
+
 				break
 			}
 
 			match self.decode_opcode() {
 				Opcode::HLT => {
-					println!("[\x1b[94mINFO\x1b[0m] HLT found at cycle {}, execution aborted", self.pc);
+					warn!(format!("HLT found at cycle {}, execution aborted", self.pc));
+
 					break;
 				},
 				Opcode::LOAD => {
-					println!("[\x1b[92mINFO\x1b[0m] LOAD found at cycle {}", self.pc);
-					let register = self.next_8_bits() as usize;
+					info!(format!("LOAD found at cycle {}", self.pc));
+
+					let register = self.get_register()?;
 					let number = self.next_16_bits() as u32;
 
 					self.registers[register] = number;
 				},
+				Opcode::ADD => {
+					info!(format!("ADD found at cycle {}", self.pc));
+
+					let a = self.registers[self.get_register()?];
+					let b = self.registers[self.get_register()?];
+					let dest = self.next_8_bits() as usize;
+
+					self.registers[dest] = a + b;
+				},
+				Opcode::MUL => {
+					info!(format!("MUL found at cycle {}", self.pc));
+
+					let a = self.registers[self.get_register()?];
+					let b = self.registers[self.get_register()?];
+					let dest = self.next_8_bits() as usize;
+
+					self.registers[dest] = a * b;
+				},
+				Opcode::SUB => {
+					info!(format!("SUB found at cycle {}", self.pc));
+
+					let a = self.registers[self.get_register()?];
+					let b = self.registers[self.get_register()?];
+					let dest = self.next_8_bits() as usize;
+
+					self.registers[dest] = a - b;
+				},
+				Opcode::DIV => {
+					info!(format!("DIV found at cycle {}", self.pc));
+
+					let a = self.registers[self.get_register()?];
+					let b = self.registers[self.get_register()?];
+					let dest = self.next_8_bits() as usize;
+
+					self.registers[dest] = a / b;
+				},
+				Opcode::REM => {
+					info!(format!("REM found at cycle {}", self.pc));
+
+					let a = self.registers[self.get_register()?];
+					let b = self.registers[self.get_register()?];
+					let dest = self.next_8_bits() as usize;
+
+					self.registers[dest] = a % b;
+				},
 				Opcode::NIL => {
-					println!("[\x1b[91mERROR\x1b[0m] Opcode not supported at cycle {}, execution aborted", self.pc);
+					error!(format!("NIL found at cycle {}, panic", self.pc));
 					break
 				}
 			}
 		}
+
+		Some(())
 	}
 }
 
 #[cfg(test)]
 mod vm_tests {
-    use super::*;
+	use super::*;
 
 	#[test]
 	fn test_load_opcode() {
-		
 		let mut vm = VM::new();
-		vm.program = vec![1, 2, 0, 0x20, 0]; // should load in register 2, as it is 0-indexed, number 32, and then halt
+
+		// should load in register 2, as it is 0-indexed, number 32, and then halt
+		vm.program = vec![1, 2, 0, 32, 0];
 
 		vm.run();
 		assert_eq!(vm.registers[2], 32);
+	}
+
+	#[test]
+	fn test_math_opcodes() {
+		let mut vm = VM::new();
+
+		// should to the following
+		// - load 20 in registry 1
+		// - load 10 in registry 2
+		// - r3 = r1 + r2
+		// - r4 = r1 * r2
+		// - r5 = r1 - r2
+		// - r6 = r1 / r2
+		// - r7 = r1 % r2
+		vm.program = vec![
+			1, 1, 0, 20, 1, 2, 0, 10, 2, 1, 2, 3, 3, 1, 2, 4, 4, 1, 2, 5, 5, 1, 2, 6, 6, 1, 2, 7, 0,
+		];
+
+		vm.run();
+		assert_eq!(vm.registers[0..8], vec![0, 20, 10, 30, 200, 10, 2, 0]);
 	}
 }
