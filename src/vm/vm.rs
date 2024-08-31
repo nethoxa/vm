@@ -6,7 +6,8 @@ use crate::{debug, error, info, warn};
 pub struct VM {
 	registers: [u32; 32],
 	pc:        usize,
-	program:   Vec<u8>
+	program:   Vec<u8>,
+	aborted:   bool
 }
 
 impl VM {
@@ -15,15 +16,26 @@ impl VM {
 		VM {
 			registers: [0u32; 32],
 			pc:        0,
-			program:   vec![]
+			program:   vec![],
+			aborted:   false
 		}
+	}
+
+	pub fn reset(&mut self) {
+		self.registers = [0u32; 32];
+		self.pc = 0;
+		self.program = vec![];
+		self.aborted = false;
 	}
 
 	/// Fetches the byte at `self.pc`, cast it into an `Opcode` and increments
 	/// `self.pc` by `1`
-	fn decode_opcode(&mut self) -> Opcode {
+	fn decode_opcode(
+		&mut self
+	) -> Opcode {
 		let opcode = Opcode::from(self.program[self.pc]);
 		self.pc += 1;
+
 		opcode
 	}
 
@@ -31,6 +43,7 @@ impl VM {
 	fn next_8_bits(&mut self) -> u8 {
 		let result = self.program[self.pc];
 		self.pc += 1;
+
 		result
 	}
 
@@ -38,11 +51,13 @@ impl VM {
 	fn next_16_bits(&mut self) -> u16 {
 		let result = ((self.program[self.pc] as u16) << 8) | self.program[self.pc + 1] as u16;
 		self.pc += 2;
+
 		result
 	}
 
 	fn get_register(&mut self) -> Option<usize> {
 		let register = self.next_8_bits() as usize;
+		
 		if register >= self.registers.len() {
 			error!(format!("Registry OOB access, panic"));
 			None
@@ -56,7 +71,8 @@ impl VM {
 		loop {
 			if self.pc >= self.program.len() {
 				error!("Something went wrong, VM program counter > program length");
-
+				self.aborted = true;
+						
 				break
 			}
 
@@ -119,8 +135,45 @@ impl VM {
 
 					self.registers[dest] = a % b;
 				},
+				Opcode::JMP => {
+					info!(format!("JMP found at cycle {}", self.pc));
+
+					let dest = self.next_16_bits() as usize;
+					let padding = self.next_8_bits() as usize;
+
+					// check padding is filled with 0s
+					if padding != 0 {
+						error!(format!("Invalid JMP padding, it is not zero"));
+						self.aborted = true;
+						
+						break;
+					}
+
+					// check dest falls in the first instruction byte
+					if dest % 4 != 0 {
+						error!(format!("Invalid JMP addr, tried jumping to {}", dest));
+						self.aborted = true;
+						
+						break;
+					}
+					// check we do not jump OOB of the program
+					if dest >= self.program.len() {
+						error!(format!(
+							"Invalid JMP addr, length of program is {}, tried jumping to {}",
+							self.program.len(),
+							dest
+						));
+						self.aborted = true;
+						
+						break;
+					}
+
+					self.pc = dest;
+				},
 				Opcode::NIL => {
 					error!(format!("NIL found at cycle {}, panic", self.pc));
+					self.aborted = true;
+						
 					break
 				}
 			}
@@ -149,19 +202,77 @@ mod vm_tests {
 	fn test_math_opcodes() {
 		let mut vm = VM::new();
 
-		// should to the following
-		// - load 20 in registry 1
-		// - load 10 in registry 2
-		// - r3 = r1 + r2
-		// - r4 = r1 * r2
-		// - r5 = r1 - r2
-		// - r6 = r1 / r2
-		// - r7 = r1 % r2
 		vm.program = vec![
-			1, 1, 0, 20, 1, 2, 0, 10, 2, 1, 2, 3, 3, 1, 2, 4, 4, 1, 2, 5, 5, 1, 2, 6, 6, 1, 2, 7, 0,
+			1, 1, 0, 20, // load 20 in registry 1
+			1, 2, 0, 10, // load 10 in registry 2
+			2, 1, 2, 3, // r3 = r1 + r2
+			3, 1, 2, 4, // r4 = r1 * r2
+			4, 1, 2, 5, // r5 = r1 - r2
+			5, 1, 2, 6, // r6 = r1 / r2
+			6, 1, 2, 7, // r7 = r1 % r2
+			0, // HLT
 		];
 
 		vm.run();
 		assert_eq!(vm.registers[0..8], vec![0, 20, 10, 30, 200, 10, 2, 0]);
+	}
+
+	#[test]
+	fn test_jump_opcode() {
+		let mut vm = VM::new();
+
+		// happy program
+		vm.program = vec![
+			1, 1, 0, 1, // load 1 in registry 1
+			1, 2, 0, 2, // load 2 in registry 2
+			2, 3, 1, 3, // r3 = r3 + r1
+			2, 3, 2, 3, // r3 = r3 + r2
+			7, 0, 28, 0, // pc = 28
+			0, 0, 0, 0, // padding to verify it jumps correctly
+			0, 0, 0, 0, // padding to verify it jumps correctly
+			2, 3, 2, 3, // r3 = r3 + r1
+			0 // HLT
+		];
+
+		vm.run();
+		assert_eq!(vm.registers[0..4], vec![0, 1, 2, 5]);
+
+		vm.reset();
+		
+		// test invalid padding
+		vm.program = vec![
+			1, 1, 0, 1, // load 1 in registry 1
+			1, 2, 0, 2, // load 2 in registry 2
+			2, 3, 1, 3, // r3 = r3 + r1
+			2, 3, 2, 3, // r3 = r3 + r2
+			7, 0, 28, 123 // pc = 28
+		];
+
+		vm.run();
+		assert_eq!(vm.aborted, true);
+
+		vm.reset();
+
+		// test OOB jump
+		vm.program = vec![
+			7, 0, 100, 0 // pc = 100
+		];
+
+		vm.run();
+		assert_eq!(vm.aborted, true);
+
+		vm.reset();
+
+		// test invalid jump byte
+		vm.program = vec![
+			1, 1, 0, 1, // load 1 in registry 1
+			1, 2, 0, 2, // load 2 in registry 2
+			2, 3, 1, 3, // r3 = r3 + r1
+			2, 3, 2, 3, // r3 = r3 + r2
+			7, 0, 1, 0 // pc = 1
+		];
+
+		vm.run();
+		assert_eq!(vm.aborted, true);
 	}
 }

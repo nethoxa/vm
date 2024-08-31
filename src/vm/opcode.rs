@@ -50,6 +50,13 @@ pub enum Opcode {
 	/// - 24..32 is the destination registry
 	REM,
 
+	/// Jmp operation
+	///
+	/// - 0..8   is the opcode
+	/// - 8..24  is the destination PC
+	/// - 24..32 is filled with 0s
+	JMP,
+
 	/// `Opcode` not supported
 	NIL
 }
@@ -65,6 +72,7 @@ impl From<u8> for Opcode {
 			4 => Opcode::SUB,
 			5 => Opcode::DIV,
 			6 => Opcode::REM,
+			7 => Opcode::JMP,
 
 			_ => Opcode::NIL
 		}
