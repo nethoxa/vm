@@ -1,10 +1,12 @@
+use bnum::types::U512;
+
 use crate::vm::opcode::Opcode;
 use crate::{error, info, warn};
 
 #[derive(Debug, Clone)]
 /// Registry-based virtual machine
 pub struct VM {
-	pub registers: [u32; 32],
+	pub registers: [U512; 32],
 	pub pc:        usize,
 	pub program:   Vec<u8>,
 
