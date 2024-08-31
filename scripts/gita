@@ -1,0 +1,64 @@
+#!/bin/bash
+if [ $# -lt 1 ]; then
+    echo "Usage:" 
+    echo "      gita <action> <file_path> [commit message...]"
+    echo "Actions:"
+    echo "  g - GENERAL commit"
+    echo "  d - DEV commit"
+    echo "  r - REORG commit"
+    echo "  b - BUGFIX commit"
+    echo "  x - git reset"
+    echo "  p - git push"
+    echo "file_path: Path to the file (can include wildcards)"
+    exit 1
+fi
+
+action=$1
+path=$2
+commit=$2
+shift 2
+message="$*"
+
+case $action in
+    g)
+        if [ -n "$message" ]; then
+                git add $path
+                git commit -m "[GENERAL] $message"
+            else
+                echo "No commit message provided"
+        fi
+        ;;
+    d)
+        if [ -n "$message" ]; then
+                git add $path
+                git commit -m "[DEV] $message"
+            else
+                echo "No commit message provided"
+        fi
+        ;;
+    r)
+        if [ -n "$message" ]; then
+                git add $path
+                git commit -m "[REORG] $message"
+            else
+                echo "No commit message provided"
+        fi
+        ;;
+    b)
+        if [ -n "$message" ]; then
+                git add $path
+                git commit -m "[BUGFIX] $message"
+            else
+                echo "No commit message provided"
+        fi
+        ;;
+    x)
+        git reset --hard $commit
+        ;;
+    p)
+        git push
+        ;;
+    *)
+        echo "Invalid action $action"
+        ;;
+esac
