@@ -2,12 +2,18 @@ pub mod common;
 pub mod vm;
 
 use std::io::{self, Write};
+use std::process::Command;
+
 use vm::vm::VM;
 
 #[macro_use]
 pub mod utils;
 
 fn main() {
+	Command::new("clear")
+		.status()
+		.expect("Failed to clean terminal");
+	
 	let mut vm = VM::new();
 	println!("Usage of this shitty vm:");
 	println!("    .program   => Outputs the current program as a vec array");
