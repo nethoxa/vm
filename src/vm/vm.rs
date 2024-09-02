@@ -80,8 +80,10 @@ impl VM {
 		}
 	}
 
-	pub fn run_n_steps(&mut self, n: usize) -> Result<(), VirtualMachineError> {
-		
+	pub fn run_n_steps(
+		&mut self,
+		n: usize
+	) -> Result<(), VirtualMachineError> {
 		for _ in 0..n {
 			if self.pc >= self.program.len() {
 				error!("Something went wrong, VM program counter > program length");

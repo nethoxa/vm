@@ -13,7 +13,7 @@ fn main() {
 	Command::new("clear")
 		.status()
 		.expect("Failed to clean terminal");
-	
+
 	let mut vm = VM::new();
 	println!("Usage of this shitty vm:");
 	println!("    .program   => Outputs the current program as a vec array");
@@ -51,13 +51,13 @@ fn main() {
 				debug!("Quitting the vm...");
 				break;
 			},
-            "" => {},
+			"" => {},
 			_ => {
 				let mut instruction: Vec<u8> = input
 					.split_whitespace()
 					.map(|s| s.parse().expect("Failed to parse number"))
 					.collect();
-                let n = instruction.len() / 4;
+				let n = instruction.len() / 4;
 				vm.add_instructions(&mut instruction).unwrap_or_else(|err| {
 					error!(format!(
 						"Virtual machine panicked when adding instruction {:?} with error {:?}",
