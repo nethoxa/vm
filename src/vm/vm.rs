@@ -6,11 +6,10 @@ use crate::{error, info, warn};
 /// Registry-based virtual machine
 pub struct VM {
 	pub registers: [u32; 32],
-	pub result: u32,
 	pub pc:        usize,
 	pub program:   Vec<u8>,
-	pub error: VirtualMachineError,
-	pub aborted: bool
+	pub error:     VirtualMachineError,
+	pub aborted:   bool
 }
 
 impl VM {
@@ -18,10 +17,9 @@ impl VM {
 	pub fn new() -> VM {
 		VM {
 			registers: [0; 32],
-			result: 0,
 			pc:        0,
 			program:   vec![],
-			error: VirtualMachineError::NOP,
+			error:     VirtualMachineError::NOP,
 			aborted:   false
 		}
 	}
@@ -58,32 +56,45 @@ impl VM {
 		result
 	}
 
-	fn get_register(&mut self) -> Option<usize> {
+	fn get_register(&mut self) -> Result<usize, VirtualMachineError> {
 		let register = self.next_8_bits() as usize;
 
 		if register >= self.registers.len() {
 			error!(format!("Registry OOB access, panic"));
-			None
+			Err(VirtualMachineError::RegistryOutOfBoundsAccess)
 		} else {
-			Some(register)
+			Ok(register)
 		}
 	}
 
-	/// Main function of the `VM`
-	pub fn run(&mut self) -> Option<()> {
-		loop {
+	pub fn add_instructions(
+		&mut self,
+		instruction: &mut Vec<u8>
+	) -> Result<(), VirtualMachineError> {
+		if instruction.len() % 4 != 0 || instruction.len() == 0 {
+			Err(VirtualMachineError::MalformedInstruction)
+		} else {
+			self.program.append(instruction);
+
+			Ok(())
+		}
+	}
+
+	pub fn run_n_steps(&mut self, n: usize) -> Result<(), VirtualMachineError> {
+		
+		for _ in 0..n {
 			if self.pc >= self.program.len() {
 				error!("Something went wrong, VM program counter > program length");
 				self.aborted = true;
 
-				break
+				return Err(VirtualMachineError::ProgramCounterOverflow)
 			}
 
 			match self.decode_opcode() {
 				Opcode::HLT => {
 					warn!(format!("HLT found at cycle {}, execution aborted", self.pc));
 
-					break;
+					return Err(VirtualMachineError::VirtualMachinePanicked)
 				},
 				Opcode::LOAD => {
 					info!(format!("LOAD found at cycle {}", self.pc));
@@ -149,7 +160,7 @@ impl VM {
 						error!(format!("Invalid JMP padding, it is not zero"));
 						self.aborted = true;
 
-						break;
+						return Err(VirtualMachineError::InvalidJump)
 					}
 
 					// check dest falls in the first instruction byte
@@ -157,7 +168,7 @@ impl VM {
 						error!(format!("Invalid JMP addr, tried jumping to {}", dest));
 						self.aborted = true;
 
-						break;
+						return Err(VirtualMachineError::InvalidJump)
 					}
 					// check we do not jump OOB of the program
 					if dest >= self.program.len() {
@@ -168,7 +179,7 @@ impl VM {
 						));
 						self.aborted = true;
 
-						break;
+						return Err(VirtualMachineError::InvalidJump)
 					}
 
 					self.pc = dest;
@@ -239,7 +250,7 @@ impl VM {
 						error!(format!("Invalid NOT padding, it is not zero"));
 						self.aborted = true;
 
-						break;
+						return Err(VirtualMachineError::InvalidPadding)
 					}
 					self.registers[dest] = !a as u32;
 				},
@@ -248,19 +259,24 @@ impl VM {
 						"NOP found at cycle {}, waiting for more bytecode",
 						self.pc
 					));
-
-					continue;
 				},
 				Opcode::NIL => {
 					error!(format!("NIL found at cycle {}, panic", self.pc));
 					self.aborted = true;
 
-					break
+					return Err(VirtualMachineError::VirtualMachinePanicked)
 				}
 			}
 		}
 
-		Some(())
+		Ok(())
+	}
+
+	/// Main function of the `VM`
+	pub fn run(&mut self) -> Result<(), VirtualMachineError> {
+		loop {
+			self.run_n_steps(1)?;
+		}
 	}
 }
 
