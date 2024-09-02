@@ -1,15 +1,15 @@
-use bnum::types::U512;
-
+use crate::common::errors::VirtualMachineError;
 use crate::vm::opcode::Opcode;
 use crate::{error, info, warn};
 
 #[derive(Debug, Clone)]
 /// Registry-based virtual machine
 pub struct VM {
-	pub registers: [U512; 32],
+	pub registers: [u32; 32],
+	pub result: u32,
 	pub pc:        usize,
 	pub program:   Vec<u8>,
-
+	pub error: VirtualMachineError,
 	pub aborted: bool
 }
 
@@ -17,15 +17,17 @@ impl VM {
 	/// Creates a new `VM` with all fields set to `0`
 	pub fn new() -> VM {
 		VM {
-			registers: [0u32; 32],
+			registers: [0; 32],
+			result: 0,
 			pc:        0,
 			program:   vec![],
+			error: VirtualMachineError::NOP,
 			aborted:   false
 		}
 	}
 
 	pub fn reset(&mut self) {
-		self.registers = [0u32; 32];
+		self.registers = [0; 32];
 		self.pc = 0;
 		self.program = vec![];
 		self.aborted = false;
@@ -247,7 +249,7 @@ impl VM {
 						self.pc
 					));
 
-					break;
+					continue;
 				},
 				Opcode::NIL => {
 					error!(format!("NIL found at cycle {}, panic", self.pc));

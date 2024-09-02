@@ -10,8 +10,8 @@ pub enum MathError {
 	DivisionByZero
 }
 
-#[derive(Debug)]
-pub enum VirtualMachineError {}
-
-#[derive(Debug)]
-pub enum BlockchainError {}
+#[derive(Debug, Clone)]
+pub enum VirtualMachineError {
+	NOP,
+	ProgramCounterOverflow
+}
